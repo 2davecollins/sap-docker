@@ -62,15 +62,26 @@ $ docker-compose --version
 ```
 $ docker version
 $ docker info
-$ docker ps         list running containers
-$ docker ps -a      list all containers
-$ docker logs       show the container outputs
+$ docker ps         # list running containers
+$ docker ps -a      # list all containers
+$ docker logs       # show the container outputs
 $ docker inspect [container]
 $ docker container stop [id]
 $ docker stop $(docker ps -aq)
 $ docker container rm  [ID] [1d] [id]
 $ docker container rm -f [ID]
 $ docker rm $(docker ps -aq)
+
+$ docker container stats [NAME]
+
+with git bash
+$ winpty docker container run -it --name [NAME] nginx bash
+
+$ docker container run -it --name ubuntu ubuntu
+$ docker container run --rm -it --name [NAME] ubuntu
+$ docker container exec -it mysql bash
+$ docker container run -it alpine sh
+
 ```
 ## docker images information
 ```
@@ -82,9 +93,54 @@ $ docker rmi [image]
 $ docker rmi $(docker images -a -q)
 
 ```
+## Networking
+```
+$ docker network ls
+$ docker network inspect [NETWORK_NAME]
+("bridge" is default)
 
+$ docker network create [NETWORK_NAME]
+$ docker network connect [NETWORK_NAME] [CONTAINER_NAME]
+$ docker network disconnect [NETWORK_NAME] [CONTAINER_NAME]
+
+detatch network
+$ docker network disconnect
+```
+## volumes
+```
+$ docker volume ls
+$ docker volume prune
+
+$ docker container run -d --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=True -v mysql-db:/var/lib/mysql mysql
+$ docker volume inspect mysql-db
+
+Run and be able to edit index.html file (local dir should have the Dockerfile and the index.html)
+$ docker container run  -p 80:80 -v $(pwd):/usr/share/nginx/html nginx
+
+```
+## docker create
+```
+docker create [options] IMAGE
+  -a, --attach               # attach stdout/err
+  -i, --interactive          # attach stdin (interactive)
+  -t, --tty                  # pseudo-tty
+      --name NAME            # name your image
+  -p, --publish 5000:5000    # port map
+      --expose 5432          # expose a port to linked containers
+  -P, --publish-all          # publish all ports
+      --link container:alias # linking
+  -v, --volume `pwd`:/app    # mount (absolute paths needed)
+  -e, --env NAME=hello       # env vars
+```
+## docker exec
+```
+docker exec [options] CONTAINER COMMAND
+  -d, --detach        # run in background
+  -i, --interactive   # stdin
+  -t, --tty           # interactive
+
+```
 ## Sample container creation
-
 ```
 NGINX:
 $ docker container run -d -p 80:80 --name nginx nginx
@@ -97,7 +153,6 @@ $ docker container run -d -p 27017:27017 --name mongo mongo
 
 MYSQL:
 $ docker container run -d -p 3306:3306 --name mysql --env MYSQL_ROOT_PASSWORD=123456 mysql
-
 
 EXAMPLE MYSQL 1
 ## Default bridge network
@@ -112,8 +167,6 @@ docker run \
     -p 8080:80 \
     -e PMA_HOST=172.17.0.2 \
     phpmyadmin/phpmyadmin
-
-
 
 ## MYSQL EXAMPLE 2 
 ## Custom bridge network
@@ -135,7 +188,6 @@ docker run \
     -e PMA_HOST=mysql \
     -d phpmyadmin/phpmyadmin
 
-
 REDIS:
 CREATE NEW CUSTOM NETWORK
 docker network create redis
@@ -154,8 +206,65 @@ docker run \
     -e REDIS_HOST=redis \
     -d rediscommander/redis-commander
 
+```
+## Dockerfile
+```
+$ FROM              # The os used. Common is alpine, debian, ubuntu
+$ ENV               # Environment variables
+$ RUN               # Run commands/shell scripts, etc
+$ EXPOSE            # Ports to expose
+$ CMD               # Final command run when you launch a new container from image
+$ WORKDIR           # Sets working directory (also could use 'RUN cd /some/path')
+$ COPY              # Copies files from host to container
 
+build image from same directory as Dockerfile
+$ docker image build -t [NAME] .
 
+Example
+FROM nginx:latest                   # Extends nginx so everything included in that image is included here
+WORKDIR /usr/share/nginx/html
+COPY index.html index.html
 
+Build
+$ docker image build -t nginx-website
+
+Run
+$ docker container run -p 80:80 --rm nginx-website
+
+```
+## clean up
+```
+$ docker image prune             # unused images
+$ docker image prune -a          # all not in use
+$ docker system prune            # entire system
+$ docker kill $(docekr ps -q )   # kill all running containers
+
+```
+# docker-compose
+## Basic example
+```
+version: '2'
+services:
+    web:
+    build: .            # build from Dockerfile
+    context: ./Path
+    dockerfile: Dockerfile
+    ports:
+        - "5000:5000"
+    volumes:
+        - .:/code
+    redis:
+        image: redis
+
+```
+### commands
+```
+$ docker-compose start
+$ docker-compose stop
+$ docker-compose pause
+$ docker-compose unpause
+$ docker-compose ps
+$ docker-compose up
+$ docker-compose down
 
 ```
