@@ -102,6 +102,7 @@ $ docker network inspect [NETWORK_NAME]
 $ docker network create [NETWORK_NAME]
 $ docker network connect [NETWORK_NAME] [CONTAINER_NAME]
 $ docker network disconnect [NETWORK_NAME] [CONTAINER_NAME]
+$ docker network rm [NETWORK_NAME]
 
 detatch network
 $ docker network disconnect
@@ -187,6 +188,40 @@ docker run \
     -p 8080:80 \
     -e PMA_HOST=mysql \
     -d phpmyadmin/phpmyadmin
+
+## EXAMPLE 3
+START PHPMYADMIN WITH PMA_HOST ON OKEANOS
+
+START PHPMYADMIN WITH PMA_HOST VARIABLE (over DNS name - name of the container)
+docker run \
+    --network mysql \
+    -p [OKEANOS-IP]:8080:80 \
+    -e PMA_HOST=mysql \
+    -d phpmyadmin/phpmyadmin
+
+## EXAMPLE 4
+# START MYSQL WITH PERSISTANT DATA IN LOCAL /DB/DATADIR
+docker run \
+    --network mysql 
+    -v /db/datadir:/var/lib/mysql 
+    -e MYSQL_ROOT_PASSWORD=my-password 
+    --name mysql 
+    -d mysql
+
+
+CREATE DATABASE DUMP
+Most of the normal tools will work, although their usage might be a little convoluted in some cases to ensure they have access to the mysqld server.
+A simple way to ensure this is to use docker exec and run the tool from the same container, similar to the following:
+
+docker exec mysql sh \
+    -c 'exec mysqldump --all-databases -uroot -p"$MYSQL_ROOT_PASSWORD"' \
+    > /some/path/on/your/host/all-databases.sql
+
+For restoring data. You can use docker exec command with -i flag, similar to the following:
+
+docker exec -i some-mysql sh \
+    -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < /some/path/on/your/host/all-databases.sql
+
 
 REDIS:
 CREATE NEW CUSTOM NETWORK
