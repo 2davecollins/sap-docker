@@ -201,9 +201,10 @@ docker run \
 
 ## EXAMPLE 4
 # START MYSQL WITH PERSISTANT DATA IN LOCAL /DB/DATADIR
+# CREATE directories on local machine mkdir db cd db mkdir datadit
 docker run \
     --network mysql 
-    -v /db/datadir:/var/lib/mysql 
+    -v $(pwd)/db/datadir:/var/lib/mysql 
     -e MYSQL_ROOT_PASSWORD=my-password 
     --name mysql 
     -d mysql
